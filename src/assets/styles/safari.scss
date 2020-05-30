@@ -1,0 +1,35 @@
+body .el-table th.gutter {
+  display: table-cell !important;
+}
+
+body .el-table colgroup.gutter {
+  display: table-cell !important;
+}
+
+table {
+  width: 100% !important;
+}
+
+.login {
+  .login-center {
+    .content {
+      .el-input {
+        font-size: 20px;
+        border: 1px solid transparent;
+        border-bottom-color: #5570c5;
+
+        .el-input__inner {
+          background-color: transparent;
+          line-height: normal;
+          color: #5570c5;
+          border: none;
+          border-radius: 0;
+        }
+      }
+    }
+  }
+}
+
+.el-input__inner {
+  line-height: normal !important;
+}
