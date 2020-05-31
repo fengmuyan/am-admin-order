@@ -49,14 +49,14 @@
         </el-col>
       </el-row>
       <el-table style="width: 100%" v-loading="loading" :data="aideList">
-        <el-table-column label="序号" prop="order" width="55" show-overflow-tooltip/>
-        <el-table-column label="客户端ID" prop="id" width="80" show-overflow-tooltip/>
-        <el-table-column label="对应主账号" prop="parentId" width="80" show-overflow-tooltip/>
-        <el-table-column label="APP" prop="app" width="150" show-overflow-tooltip/>
-        <el-table-column label="APP名称" prop="platformName" show-overflow-tooltip/>
+        <el-table-column label="序号" prop="order" width="55" show-overflow-tooltip />
+        <el-table-column label="客户端ID" prop="id" width="80" show-overflow-tooltip />
+        <el-table-column label="对应主账号" prop="parentId" width="80" show-overflow-tooltip />
+        <el-table-column label="APP" prop="app" width="150" show-overflow-tooltip />
+        <el-table-column label="APP名称" prop="platformName" show-overflow-tooltip />
         <el-table-column label="APP路径" prop="apppath" width="180" show-overflow-tooltip />
-        <el-table-column label="APP账号" prop="appuser" width="80" show-overflow-tooltip/>
-        <el-table-column label="跟单比例（%）" prop="proportion" width="100" show-overflow-tooltip/>
+        <el-table-column label="APP账号" prop="appuser" width="80" show-overflow-tooltip />
+        <el-table-column label="跟单比例（%）" prop="proportion" width="100" show-overflow-tooltip />
         <el-table-column label="账号状态" align="status" width="120" show-overflow-tooltip>
           <template slot-scope="scope">
             <el-switch
@@ -67,8 +67,14 @@
             ></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="最近操作时间" sortable prop="operationDate" width="150px" show-overflow-tooltip/>
-        <el-table-column label="操作" width="180px" show-overflow-tooltip>
+        <el-table-column
+          label="最近操作时间"
+          sortable
+          prop="operationDate"
+          width="150px"
+          show-overflow-tooltip
+        />
+        <el-table-column label="操作" width="240px" show-overflow-tooltip>
           <template slot-scope="scope">
             <el-button
               size="mini"
@@ -76,6 +82,12 @@
               icon="el-icon-edit"
               @click="handleEdit(scope.row)"
             >修改配置</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-download"
+              @click="handleExport(scope.row)"
+            >导出</el-button>
             <el-button
               size="mini"
               type="text"
@@ -195,7 +207,8 @@ import {
   handelMainStatusEdit,
   handelMainInfoEdit,
   getPlatformList,
-  getAllMainList
+  getAllMainList,
+  handelGenClientConfig
 } from "@/api/main";
 import minHeightMix from "@/mixins/minHeight";
 export default {
@@ -247,7 +260,7 @@ export default {
         apppath: undefined,
         platformId: undefined,
         appuser: undefined,
-        proportion:undefined,
+        proportion: undefined,
         remarks: undefined
       },
       rules: {
@@ -329,7 +342,7 @@ export default {
         apppath: undefined,
         platformId: undefined,
         appuser: undefined,
-        proportion:undefined,
+        proportion: undefined,
         remarks: undefined
       });
     },
@@ -390,6 +403,28 @@ export default {
           console.log(err);
           this.loadingForm = false;
           row.status = row.status === "1" ? "0" : "1";
+        });
+    },
+    handleExport(item) {
+      this.$confirm(`是否导出 ${item.id} 配置项?`, "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        customClass: "el-message-box-wran"
+      })
+        .then(async () => {
+          this.loading = true;
+          const { msg, code } = await handelGenClientConfig({
+            clientId: item.id
+          });
+          this.loading = false;
+          if (code === 200) {
+            this.download(msg);
+            this.msgSuccess("导出成功");
+          }
+        })
+        .catch(err => {
+          this.loading = false;
         });
     },
     submitForm(formName) {

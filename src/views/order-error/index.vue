@@ -79,7 +79,7 @@
         <el-table-column label="跟单数量" sortable prop="num" width="100" />
         <el-table-column label="单价" sortable prop="unitPriceStr" />
         <el-table-column label="剩余数量" sortable prop="stockNum" width="100" />
-        <el-table-column label="异常原因" sortable prop="failReason" width="100" />
+        <el-table-column label="异常原因" prop="failReason" width="100" />
         <el-table-column label="操作" width="130px">
           <template slot-scope="scope">
             <el-button

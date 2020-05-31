@@ -51,7 +51,7 @@
       <el-table style="width: 100%" v-loading="loading" :data="mainList">
         <el-table-column label="序号" prop="order" width="55" />
         <el-table-column label="客户端ID" prop="id" width="100" />
-        <el-table-column label="APP" prop="app" width="120" show-overflow-tooltip/>
+        <el-table-column label="APP" prop="app" width="120" show-overflow-tooltip />
         <el-table-column label="APP名称" prop="platformName" width="150" show-overflow-tooltip />
         <el-table-column label="APP路径" prop="apppath" width="180" show-overflow-tooltip />
         <el-table-column label="APP账号" prop="appuser" />
@@ -66,7 +66,7 @@
           </template>
         </el-table-column>
         <el-table-column label="最近操作时间" sortable prop="operationDate" width="150px" />
-        <el-table-column label="操作" width="180px">
+        <el-table-column label="操作" width="240px">
           <template slot-scope="scope">
             <el-button
               size="mini"
@@ -74,6 +74,12 @@
               icon="el-icon-edit"
               @click="handleEdit(scope.row)"
             >修改配置</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-download"
+              @click="handleExport(scope.row)"
+            >导出</el-button>
             <el-button
               size="mini"
               type="text"
@@ -168,7 +174,8 @@ import {
   getMainList,
   handelMainStatusEdit,
   handelMainInfoEdit,
-  getPlatformList
+  getPlatformList,
+  handelGenClientConfig
 } from "@/api/main";
 import minHeightMix from "@/mixins/minHeight";
 export default {
@@ -308,6 +315,28 @@ export default {
       this.$router.push({
         path: `/account-main/detail/${item.id}`
       });
+    },
+    handleExport(item) {
+      this.$confirm(`是否导出 ${item.id} 配置项?`, "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        customClass: "el-message-box-wran"
+      })
+        .then(async () => {
+          this.loading = true;
+          const { msg, code } = await handelGenClientConfig({
+            clientId: item.id
+          });
+          this.loading = false;
+          if (code === 200) {
+            this.download(msg);
+            this.msgSuccess("导出成功");
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+        });
     },
     clearValidate() {
       this.$refs.form.resetFields();

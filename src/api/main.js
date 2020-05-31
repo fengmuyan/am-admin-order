@@ -133,7 +133,40 @@ export function getOrderSelect() {
   })
 }
 
+//系统配置列表
+export function getSysSettingList() {
+  return request({
+    url: '/xrobot/sys/dictList',
+    method: 'get'
+  })
+}
 
+//修改系统配置
+export function handelEditSysSetting(data = {}) {
+  return request({
+    url: '/xrobot/sys/dictSave',
+    method: 'post',
+    data
+  })
+}
+
+//账号配置生成文件
+export function handelGenClientConfig(data = {}) {
+  return request({
+    url: '/xrobot/genClientConfig',
+    method: 'post',
+    data
+  })
+}
+
+//获取分类列表
+export function getCategoryList(data = {}) {
+  return request({
+    url: '/xrobot/sys/categoryList',
+    method: 'post',
+    data
+  })
+}
 
 
 

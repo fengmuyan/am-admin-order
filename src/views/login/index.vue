@@ -131,7 +131,7 @@ export default {
     tencentCaptchaInit() {
       new TencentCaptcha(
         document.getElementById("Captcha"),
-        "2075840643",
+        "2032059143",
         async ({ ret, randstr, ticket }) => {
           if (ret === 0) {
             this.captchaStatus = 2;
