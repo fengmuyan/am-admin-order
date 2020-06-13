@@ -126,10 +126,11 @@ export function handelOrderOperate(data = {}) {
 }
 
 //订单筛选
-export function getOrderSelect() {
+export function getOrderSelect(data = {}) {
   return request({
     url: '/xrobot/allClients',
-    method: 'get'
+    method: 'post',
+    data
   })
 }
 
@@ -163,6 +164,15 @@ export function handelGenClientConfig(data = {}) {
 export function getCategoryList(data = {}) {
   return request({
     url: '/xrobot/sys/categoryList',
+    method: 'post',
+    data
+  })
+}
+
+//获取交易日志列表
+export function getTradeList(data = {}) {
+  return request({
+    url: '/xrobot/trade/tradeLogList',
     method: 'post',
     data
   })

@@ -2,14 +2,14 @@
   <div class="app-container account">
     <el-collapse-transition>
       <div class="form-p" v-if="formShow" ref="formPublic" v-resize="resize">
-        <el-form :model="queryForm" ref="queryForm" :inline="true" label-width="80px">
+        <el-form :model="queryForm" ref="queryForm" :inline="true" label-width="70px">
           <el-form-item label="APP信息" prop="platformId">
-            <el-select v-model="queryForm.platformId" style="width:300px" placeholder="请选择APP信息">
+            <el-select v-model="queryForm.platformIdStr" style="width:280px" placeholder="请选择APP信息">
               <el-option
                 v-for="(item,index) in selectList"
                 :key="index"
-                :label="item.platformName"
-                :value="item.platformId"
+                :label="`${item.platformName} -- ${item.appuser}`"
+                :value="`${item.platformId}-${item.appuser}`"
               >
                 <span style="float: left">{{ item.platformName }}</span>
                 <span
@@ -24,7 +24,7 @@
               placeholder="请选择"
               clearable
               size="small"
-              style="width: 200px"
+              style="width: 130px"
             >
               <el-option label="买入" value="0" />
               <el-option label="卖出" value="1" />
@@ -68,18 +68,17 @@
       <el-table style="width: 100%" v-loading="loading" :data="orderList">
         <el-table-column label="序号" prop="order" width="55" />
         <el-table-column label="交易号" prop="tradeId" width="120" show-overflow-tooltip />
+        <el-table-column label="父交易号" prop="masterTradeId" width="120" show-overflow-tooltip />
         <el-table-column label="项目名称" prop="tradeItemName" />
         <el-table-column label="交易时间" sortable prop="tradeTime" width="150" />
         <el-table-column label="交易货币" prop="tradeCurrency" />
-        <el-table-column label="交易方向" prop="direction">
-          <template slot-scope="scope">{{scope.row.direction | initDirection }}</template>
-        </el-table-column>
-        <el-table-column label="APP名称" prop="platformName" width="150" show-overflow-tooltip=""/>
-        <el-table-column label="APP账号" prop="appuser" />
+        <el-table-column label="交易方向" prop="direction" />
+        <el-table-column label="APP名称" prop="platformName" width="150" show-overflow-tooltip />
+        <el-table-column label="APP账号" prop="appuser" width="120"/>
         <el-table-column label="跟单数量" sortable prop="num" width="100" />
         <el-table-column label="单价" sortable prop="unitPriceStr" />
         <el-table-column label="剩余数量" sortable prop="stockNum" width="100" />
-        <el-table-column label="异常原因" prop="failReason" width="100" />
+        <el-table-column label="异常原因" prop="failReason" width="150" show-overflow-tooltip />
         <el-table-column label="操作" width="130px">
           <template slot-scope="scope">
             <el-button
@@ -91,9 +90,9 @@
             <el-button
               size="mini"
               type="text"
-              icon="el-icon-view"
+              icon="el-icon-circle-close"
               @click="handelIgnore(scope.row)"
-            >忽略</el-button>
+            >关闭</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -108,7 +107,7 @@
   </div>
 </template>
 <script>
-import { getOrderList, handelOrderOperate,getOrderSelect } from "@/api/main";
+import { getOrderList, handelOrderOperate, getOrderSelect } from "@/api/main";
 import minHeightMix from "@/mixins/minHeight";
 export default {
   mixins: [minHeightMix],
@@ -118,7 +117,7 @@ export default {
       formShow: true,
       orderList: [],
       dateRange: [],
-      selectList:[],
+      selectList: [],
       total: 0,
       queryForm: {
         pageNum: 1,
@@ -126,19 +125,14 @@ export default {
         operationCode: "0",
         direction: undefined,
         platformId: undefined,
-        appuser: undefined
+        appuser: undefined,
+        platformIdStr: ""
       }
     };
   },
   created() {
     this.getSelect();
     this.getList();
-  },
-  filters: {
-    initDirection(val) {
-      const arr = ["买入", "卖出"];
-      return arr[val];
-    }
   },
   methods: {
     async getSelect() {
@@ -176,45 +170,42 @@ export default {
     resetQuery() {
       this.dateRange = [];
       this.resetForm("queryForm");
+      this.queryForm.platformIdStr = "";
       this.handleQuery();
     },
     handelCover(item) {
-      this.$confirm(`确定要平仓 序号为${item.order}的项 吗？`, "警告", {
+      this.$confirm(`确定要平仓交易号 ${item.tradeId} 吗？`, "警告", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
         customClass: "el-message-box-wran"
       })
         .then(async () => {
-          this.loading = true;
           const { code } = await handelOrderOperate({
             operationCode: "0",
             guid: item.guid
           });
-          this.loading = false;
           if (code === 200) {
-            this.msgSuccess(`序号为${item.order}的项 已平仓`);
+            this.msgSuccess(`交易号${item.tradeId} 已平仓`);
             this.getList();
           }
         })
         .catch(() => {});
     },
     handelIgnore(item) {
-      this.$confirm(`确定要忽略 序号为${item.order}的项 吗？`, "警告", {
+      this.$confirm(`确定要关闭交易号 ${item.tradeId} 吗？`, "警告", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
         customClass: "el-message-box-wran"
       })
         .then(async () => {
-          this.loading = true;
           const { code } = await handelOrderOperate({
             operationCode: "1",
             guid: item.guid
           });
-          this.loading = false;
           if (code === 200) {
-            this.msgSuccess(`序号为${item.order}的项 已忽略`);
+            this.msgSuccess(`交易号${item.tradeId} 已关闭`);
             this.getList();
           }
         })
@@ -222,14 +213,11 @@ export default {
     },
     _initParams(obj) {
       const dateRange = this.dateRange || [];
-      const selectItem = this.selectList.find(item => {
-        return item.platformId === obj.platformId;
-      });
-      const appuser = selectItem ? selectItem.appuser : undefined;
       Object.assign(obj, {
         beginTime: dateRange.length > 0 ? dateRange[0] : undefined,
         endTime: dateRange.length > 0 ? dateRange[1] : undefined,
-        appuser
+        appuser: obj.platformIdStr.split("-")[1],
+        platformId: obj.platformIdStr.split("-")[0]
       });
       return obj;
     }

@@ -29,7 +29,7 @@
         </h4>
         <el-table style="width: 100%" :data="proData.list">
           <el-table-column label="项目ID" prop="itemId" width="80" />
-          <el-table-column label="分类" prop="categoryName" />
+          <el-table-column label="项目大类" prop="categoryName" />
           <el-table-column label="跟单项目" prop="itemName" />
           <el-table-column label="备注" prop="remarks" />
           <el-table-column label="APP名称" prop="platformName" />

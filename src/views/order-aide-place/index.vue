@@ -2,14 +2,14 @@
   <div class="app-container account">
     <el-collapse-transition>
       <div class="form-p" v-if="formShow" ref="formPublic" v-resize="resize">
-        <el-form :model="queryForm" ref="queryForm" :inline="true" label-width="80px">
+        <el-form :model="queryForm" ref="queryForm" :inline="true" label-width="70px">
           <el-form-item label="APP信息" prop="platformId">
-            <el-select v-model="queryForm.platformId" style="width:300px" placeholder="请选择APP信息">
+            <el-select v-model="queryForm.platformIdStr" style="width:280px" placeholder="请选择APP信息">
               <el-option
                 v-for="(item,index) in selectList"
                 :key="index"
-                :label="item.platformName"
-                :value="item.platformId"
+                :label="`${item.platformName} -- ${item.appuser}`"
+                :value="`${item.platformId}-${item.appuser}`"
               >
                 <span style="float: left">{{ item.platformName }}</span>
                 <span
@@ -24,10 +24,23 @@
               placeholder="请选择"
               clearable
               size="small"
-              style="width: 200px"
+              style="width: 130px"
             >
               <el-option label="买入" value="0" />
               <el-option label="卖出" value="1" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="状态" prop="tradeState">
+            <el-select
+              v-model="queryForm.tradeState"
+              placeholder="请选择状态"
+              clearable
+              size="small"
+              style="width: 130px"
+            >
+              <el-option label="全部" value="99" />
+              <el-option label="未平仓" value="0" />
+              <el-option label="已平仓" value="1" />
             </el-select>
           </el-form-item>
           <el-form-item label="交易时间">
@@ -78,11 +91,28 @@
         <el-table-column label="交易时间" sortable prop="tradeTime" width="150" />
         <el-table-column label="交易货币" prop="tradeCurrency" />
         <el-table-column label="交易方向" prop="direction" />
-        <el-table-column label="APP名称" prop="platformName" width="150" show-overflow-tooltip/>
-        <el-table-column label="APP账号" prop="appuser" />
+        <el-table-column label="APP名称" prop="platformName" width="150" show-overflow-tooltip />
+        <el-table-column label="APP账号" prop="appuser" width="120" />
         <el-table-column label="跟单数量" sortable prop="num" width="100" />
         <el-table-column label="单价" sortable prop="unitPriceStr" />
         <el-table-column label="剩余数量" sortable prop="stockNum" width="100" />
+        <el-table-column label="操作" width="130px">
+          <template slot-scope="scope">
+            <el-button
+              size="mini"
+              type="text"
+              v-if="Number(scope.row.stockNum) !== 0"
+              icon="el-icon-receiving"
+              @click="handelCover(scope.row)"
+            >平仓</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-circle-close"
+              @click="handelIgnore(scope.row)"
+            >关闭</el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <pagination
         v-show="total>0"
@@ -95,7 +125,7 @@
   </div>
 </template>
 <script>
-import { getOrderList, getOrderSelect } from "@/api/main";
+import { getOrderList, getOrderSelect, handelOrderOperate } from "@/api/main";
 import minHeightMix from "@/mixins/minHeight";
 export default {
   mixins: [minHeightMix],
@@ -114,13 +144,16 @@ export default {
         direction: undefined,
         platformId: undefined,
         appuser: undefined,
-        masterGuid: undefined
+        tradeState: "0",
+        masterGuid: undefined,
+        platformIdStr: ""
       }
     };
   },
   created() {
     if (this.$route.query.code) {
       this.queryForm.masterGuid = this.$route.query.code;
+      this.queryForm.tradeState = "99";
     }
     this.getSelect();
     this.getList();
@@ -134,7 +167,7 @@ export default {
   methods: {
     async getSelect() {
       try {
-        const { code, data } = await getOrderSelect();
+        const { code, data } = await getOrderSelect({ code: 1 });
         if (code === 200) {
           this.selectList = data;
         }
@@ -167,6 +200,8 @@ export default {
     resetQuery() {
       this.dateRange = [];
       this.resetForm("queryForm");
+      this.queryForm.tradeState = "0";
+      this.queryForm.platformIdStr = "";
       this.handleQuery();
     },
     showAll() {
@@ -179,16 +214,51 @@ export default {
         })
       );
     },
+    handelCover(item) {
+      this.$confirm(`确定要平仓交易号 ${item.tradeId} 吗？`, "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        customClass: "el-message-box-wran"
+      })
+        .then(async () => {
+          const { code } = await handelOrderOperate({
+            operationCode: "0",
+            guid: item.guid
+          });
+          if (code === 200) {
+            this.msgSuccess(`交易号${item.tradeId} 已平仓`);
+            this.getList();
+          }
+        })
+        .catch(() => {});
+    },
+    handelIgnore(item) {
+      this.$confirm(`确定要关闭交易号 ${item.tradeId} 吗？`, "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        customClass: "el-message-box-wran"
+      })
+        .then(async () => {
+          const { code } = await handelOrderOperate({
+            operationCode: "1",
+            guid: item.guid
+          });
+          if (code === 200) {
+            this.msgSuccess(`交易号${item.tradeId} 已关闭`);
+            this.getList();
+          }
+        })
+        .catch(() => {});
+    },
     _initParams(obj) {
       const dateRange = this.dateRange || [];
-      const selectItem = this.selectList.find(item => {
-        return item.platformId === obj.platformId;
-      });
-      const appuser = selectItem ? selectItem.appuser : undefined;
       Object.assign(obj, {
         beginTime: dateRange.length > 0 ? dateRange[0] : undefined,
         endTime: dateRange.length > 0 ? dateRange[1] : undefined,
-        appuser
+        appuser: obj.platformIdStr.split("-")[1],
+        platformId: obj.platformIdStr.split("-")[0]
       });
       return obj;
     }

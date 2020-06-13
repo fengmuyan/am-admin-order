@@ -3,14 +3,15 @@
     <div class="table-p" :style="{ 'min-height': minHeight }">
       <el-row :gutter="10" class="mb10 f-l">
         <el-col :span="1.5">
-          <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增系统配置</el-button>
+          <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增跟单配置参数</el-button>
         </el-col>
       </el-row>
       <el-table style="width: 100%" v-loading="loading" :data="settingList">
         <el-table-column label="序号" prop="order" width="55" />
-        <el-table-column label="分类" prop="categoryName" />
+        <el-table-column label="项目大类" prop="categoryName" />
         <el-table-column label="重试次数" prop="num" />
-        <el-table-column label="价格上下波动（元）" prop="threshold" />
+        <el-table-column label="跟单允许价差" prop="threshold" />
+        <el-table-column label="跟单允许点差" prop="marketrange" />
         <el-table-column label="下单超时时间（秒）" prop="timeout" />
         <el-table-column label="平仓超时时间（秒）" prop="unravelTimeout" />
         <el-table-column label="最近操作时间" sortable prop="operationDate" width="150px" />
@@ -51,9 +52,17 @@
         <el-form-item label="跟单允许价差" prop="threshold">
           <el-input
             v-model="form.threshold"
-            maxlength="10"
+            maxlength="8"
             style="width:300px"
             placeholder="请输入跟单允许价差"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="跟单允许点差" prop="marketrange">
+          <el-input
+            v-model="form.marketrange"
+            maxlength="8"
+            style="width:300px"
+            placeholder="请输入跟单允许点差"
           ></el-input>
         </el-form-item>
         <el-form-item label="下单超时时间" prop="timeout">
@@ -91,6 +100,7 @@ export default {
   mixins: [minHeightMix],
   data() {
     const patterAmount = /^\d+(?:\.\d{1,4})?$/;
+    const patterDot = /^[\-\+]?\d+(\.\d)?$/;
     const validateOnlyNum = (rule, value, callback) => {
       if (value === "" || value === undefined) {
         callback(new Error("必填项不能为空！"));
@@ -111,6 +121,16 @@ export default {
         callback();
       }
     };
+    const validateDot = (rule, value, callback) => {
+      if (value === "" || value === undefined) {
+        callback(new Error("必填项不能为空！"));
+      } else {
+        if (!patterDot.test(value)) {
+          callback(new Error("最多保留一位小数！"));
+        }
+        callback();
+      }
+    };
     return {
       loading: false,
       loadingForm: false,
@@ -123,6 +143,7 @@ export default {
         categoryId: undefined,
         num: undefined,
         threshold: undefined,
+        marketrange: undefined,
         timeout: undefined,
         unravelTimeout: undefined
       },
@@ -133,6 +154,9 @@ export default {
         num: [{ required: true, validator: validateOnlyNum, trigger: "blur" }],
         threshold: [
           { required: true, validator: validatePrice, trigger: "blur" }
+        ],
+        marketrange: [
+          { required: true, validator: validateDot, trigger: "blur" }
         ],
         timeout: [
           { required: true, validator: validateOnlyNum, trigger: "blur" }
@@ -179,6 +203,7 @@ export default {
         categoryId: undefined,
         num: undefined,
         threshold: undefined,
+        marketrange:undefined,
         timeout: undefined,
         unravelTimeout: undefined
       });
@@ -197,6 +222,7 @@ export default {
         categoryId: item.categoryId,
         num: item.num,
         threshold: item.threshold,
+        marketrange: item.marketrange,
         timeout: item.timeout,
         unravelTimeout: item.unravelTimeout
       });

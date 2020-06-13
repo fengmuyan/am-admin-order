@@ -56,6 +56,7 @@
         <el-table-column label="APP名称" prop="platformName" show-overflow-tooltip />
         <el-table-column label="APP路径" prop="apppath" width="180" show-overflow-tooltip />
         <el-table-column label="APP账号" prop="appuser" width="80" show-overflow-tooltip />
+        <el-table-column label="最大下单数" prop="maxnum" width="100" show-overflow-tooltip />
         <el-table-column label="跟单比例（%）" prop="proportion" width="100" show-overflow-tooltip />
         <el-table-column label="账号状态" align="status" width="120" show-overflow-tooltip>
           <template slot-scope="scope">
@@ -174,6 +175,9 @@
             placeholder="请输入APP账号"
           ></el-input>
         </el-form-item>
+        <el-form-item label="最大下单数" prop="maxnum">
+          <el-input v-model="form.maxnum" maxlength="8" style="width:360px" placeholder="请输入最大下单数"></el-input>
+        </el-form-item>
         <el-form-item label="跟单比例" prop="proportion">
           <el-input
             v-model="form.proportion"
@@ -234,6 +238,16 @@ export default {
         callback();
       }
     };
+    const validateMaxnum = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入最大下单数"));
+      } else {
+        if (!/^[1-9]\d*$/.test(value)) {
+          callback(new Error("最大下单数为大于零的整数！"));
+        }
+        callback();
+      }
+    };
     return {
       loading: false,
       loadingForm: false,
@@ -260,6 +274,7 @@ export default {
         apppath: undefined,
         platformId: undefined,
         appuser: undefined,
+        maxnum: undefined,
         proportion: undefined,
         remarks: undefined
       },
@@ -275,6 +290,9 @@ export default {
         ],
         appuser: [
           { required: true, message: "请输入APP账号", trigger: "blur" }
+        ],
+        maxnum: [
+          { required: true, validator: validateMaxnum, trigger: "blur" }
         ],
         parentId: [
           { required: true, message: "请选择对应主账号", trigger: "blur" }
@@ -342,6 +360,7 @@ export default {
         apppath: undefined,
         platformId: undefined,
         appuser: undefined,
+        maxnum: undefined,
         proportion: undefined,
         remarks: undefined
       });
@@ -364,6 +383,7 @@ export default {
         parentId: item.parentId,
         platformId: item.platformId,
         appuser: item.appuser,
+        maxnum: item.maxnum,
         proportion: item.proportion,
         remarks: item.remarks
       });

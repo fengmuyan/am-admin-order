@@ -155,6 +155,7 @@ export default {
     }
   },
   created() {
+    this._clearTimer();
     this.getList();
   },
   beforeDestroy() {
@@ -166,7 +167,7 @@ export default {
         this.lock = true;
         try {
           this._clearTimer();
-          this.timer = setTimeout(this.getList, 6000);
+          this.timer = setTimeout(this.getList, 7000);
           if (this.isListLoading) {
             this.loading = true;
           }
